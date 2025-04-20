@@ -1,19 +1,11 @@
 # -*- coding: utf-8 -*-
 """
-Created on Sun Apr 20 14:25:38 2025
+Created on Sun Apr 20 15:06:42 2025
 
-@author: Kasidit
+@author: kasidit
 """
 
 # app.py
-# -*- coding: utf-8 -*-
-"""
-Created on Sat Apr 19 21:19:26 2025
-@author: Nongnuch
-"""
-
-# app.py
-
 import streamlit as st
 import pickle
 import matplotlib.pyplot as plt
@@ -78,11 +70,3 @@ st.subheader("Cluster Information")
 st.write(f"Number of clusters: {num_clusters}")
 st.write("Cluster centers:")
 st.write(centers)
-
-# Option to download results
-st.download_button(
-    label="📥 Download Clustered Data",
-    data=df.to_csv(index=False),
-    file_name='iris_clustered.csv',
-    mime='text/csv'
-)
