@@ -6,66 +6,68 @@ Created on Sun Apr 20 14:25:38 2025
 """
 
 # app.py
+# -*- coding: utf-8 -*-
+"""
+Created on Sat Apr 19 21:19:26 2025
+@author: Nongnuch
+"""
+
+# app.py
 import streamlit as st
-import pandas as pd
-import numpy as np
+import pickle
 import matplotlib.pyplot as plt
 from sklearn.datasets import load_iris
 from sklearn.cluster import KMeans
 from sklearn.preprocessing import StandardScaler
+import pandas as pd
+
+# Set Streamlit page config
+st.set_page_config(page_title="Iris k-Means Clustering", layout="centered")
 
 # Title
-st.title("🌸 Iris Dataset - K-Means Clustering App")
-st.markdown("""
-This app performs **K-Means clustering** on the classic **Iris flower dataset**.
-Use the slider to choose the number of clusters, and see the results in real time.
-""")
+st.title("🌸 Iris Dataset - k-Means Clustering App")
 
-# Load Iris dataset
+# Subheader
+st.subheader("🔍 Clustering the Iris Dataset")
+
+# Load the iris dataset
 iris = load_iris()
 X = iris.data
-features = iris.feature_names
-df = pd.DataFrame(X, columns=features)
+feature_names = iris.feature_names
+df = pd.DataFrame(X, columns=feature_names)
 
-# Feature scaling
+# Feature Scaling
 scaler = StandardScaler()
 scaled_X = scaler.fit_transform(X)
 
-# User input: number of clusters
+# Select number of clusters
 k = st.slider("Select number of clusters (K)", min_value=2, max_value=10, value=3)
 
-# Apply KMeans
-kmeans = KMeans(n_clusters=k, random_state=42)
-clusters = kmeans.fit_predict(scaled_X)
+# Train model or load
+model = KMeans(n_clusters=k, random_state=42)
+model.fit(scaled_X)
+labels = model.predict(scaled_X)
+centers = model.cluster_centers_
 
-# Add cluster info to DataFrame
-df['Cluster'] = clusters
-
-# Show data table with clusters
-st.subheader("🔍 Data with Cluster Labels")
+# Show dataframe with cluster labels
+df['Cluster'] = labels
 st.write(df)
 
-# Visualize clusters (using first two features)
-st.subheader("📊 Cluster Visualization")
+# Plotting
+st.subheader("📊 Cluster Visualization (2D)")
 fig, ax = plt.subplots()
-scatter = ax.scatter(scaled_X[:, 0], scaled_X[:, 1], c=clusters, cmap='viridis', s=80)
-ax.set_xlabel(features[0])
-ax.set_ylabel(features[1])
-ax.set_title(f"K = {k}")
+scatter = ax.scatter(scaled_X[:, 0], scaled_X[:, 1], c=labels, cmap='viridis', s=80)
+ax.scatter(centers[:, 0], centers[:, 1], c='red', s=200, alpha=0.6, label='Centroids')
+ax.set_xlabel(feature_names[0])
+ax.set_ylabel(feature_names[1])
+ax.set_title(f"k = {k}")
+ax.legend()
 st.pyplot(fig)
 
-# Option to download
+# Option to download results
 st.download_button(
     label="📥 Download Clustered Data",
     data=df.to_csv(index=False),
     file_name='iris_clustered.csv',
     mime='text/csv'
 )
-
-
-# Load from a saved dataset or generate synthetic data
-from sklearn.datasets import make_blobs
-X, _ = make_blobs(n_samples=300, centers=loaded_model.n_clusters, cluster_std=0.60, random_state=0)
-
-# Predict using the loaded model
-y_kmeans = loaded_model.predict(X)
