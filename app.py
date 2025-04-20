@@ -13,56 +13,71 @@ Created on Sat Apr 19 21:19:26 2025
 """
 
 # app.py
+
 import streamlit as st
 import pickle
 import matplotlib.pyplot as plt
-from sklearn.datasets import load_iris
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-import pandas as pd
+from sklearn.datasets import make_blobs
+import numpy as np
 
-# Set Streamlit page config
-st.set_page_config(page_title="Iris k-Means Clustering", layout="centered")
+# Load the KMeans model
+with open('kmeans_model.pkl', 'rb') as f:
+    loaded_model = pickle.load(f)
+
+# Set Streamlit page configuration
+st.set_page_config(page_title="K-Means Clustering App", layout="centered")
 
 # Title
-st.title("🌸 Iris Dataset - k-Means Clustering App")
+st.title("🔍 k-Means Clustering Visualizer")
 
-# Subheader
-st.subheader("🔍 Clustering the Iris Dataset")
+# Display section header
+st.subheader("📊 Example Data for Visualization")
+st.markdown("This demo uses example 2D data to illustrate clustering results. You can adjust the number of clusters or upload your own dataset.")
 
-# Load the iris dataset
-iris = load_iris()
-X = iris.data
-feature_names = iris.feature_names
-df = pd.DataFrame(X, columns=feature_names)
+# Sidebar for user interaction
+st.sidebar.header("Adjust Parameters")
+num_clusters = st.sidebar.slider("Number of clusters", min_value=1, max_value=10, value=loaded_model.n_clusters)
+st.sidebar.markdown("### Upload Your Dataset")
+uploaded_file = st.sidebar.file_uploader("Upload CSV (Optional)", type=["csv"])
 
-# Feature Scaling
-scaler = StandardScaler()
-scaled_X = scaler.fit_transform(X)
+# Generate synthetic data or use uploaded data
+if uploaded_file is not None:
+    import pandas as pd
+    # Load user-uploaded CSV data
+    user_data = pd.read_csv(uploaded_file)
+    X = user_data.iloc[:, :-1].values  # Assuming last column is not features (could change based on data)
+    st.write("### Dataset preview", user_data.head())
+else:
+    # Generate synthetic data if no file uploaded
+    X, _ = make_blobs(
+        n_samples=300,
+        centers=num_clusters,  # Adjust the number of centers dynamically
+        cluster_std=0.60,
+        random_state=0
+    )
 
-# Select number of clusters
-k = st.slider("Select number of clusters (K)", min_value=2, max_value=10, value=3)
+# Predict cluster labels
+y_kmeans = loaded_model.predict(X)
 
-# Train model or load
-model = KMeans(n_clusters=k, random_state=42)
-model.fit(scaled_X)
-labels = model.predict(scaled_X)
-centers = model.cluster_centers_
+# Plot clusters
+plt.figure(figsize=(8, 6))
+plt.scatter(X[:, 0], X[:, 1], c=y_kmeans, s=50, cmap='viridis')
+plt.title(f'K-Means Clustering (k={num_clusters})')
+plt.xlabel('Feature 1')
+plt.ylabel('Feature 2')
 
-# Show dataframe with cluster labels
-df['Cluster'] = labels
-st.write(df)
+# Display cluster centers with red circles
+centers = loaded_model.cluster_centers_
+plt.scatter(centers[:, 0], centers[:, 1], c='red', s=200, alpha=0.5, marker='o', label="Centroids")  # Changed marker to 'o'
 
-# Plotting
-st.subheader("📊 Cluster Visualization (2D)")
-fig, ax = plt.subplots()
-scatter = ax.scatter(scaled_X[:, 0], scaled_X[:, 1], c=labels, cmap='viridis', s=80)
-ax.scatter(centers[:, 0], centers[:, 1], c='red', s=200, alpha=0.6, label='Centroids')
-ax.set_xlabel(feature_names[0])
-ax.set_ylabel(feature_names[1])
-ax.set_title(f"k = {k}")
-ax.legend()
-st.pyplot(fig)
+plt.legend()
+st.pyplot(plt)
+
+# Display summary information
+st.subheader("Cluster Information")
+st.write(f"Number of clusters: {num_clusters}")
+st.write("Cluster centers:")
+st.write(centers)
 
 # Option to download results
 st.download_button(
